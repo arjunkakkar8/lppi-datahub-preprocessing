@@ -7,7 +7,7 @@ library(styler)
 styler:::style_active_file()
 
 # Read IPUMS data files
-ddi <- read_ipums_ddi("data/usa_00161.xml")
+ddi <- read_ipums_ddi("data/usa_00162.xml")
 raw <- read_ipums_micro(ddi)
 
 # Show variable descriptions and levels in an interactive
@@ -24,6 +24,8 @@ processed <- raw %>%
   transmute(
     SEX = SEX,
     AGE = AGE,
+    HHWT = HHWT,
+    PERWT = PERWT,
     gq = case_when(
       GQ %in% c(1, 2, 5) ~ 0,
       TRUE ~ 1
@@ -638,6 +640,9 @@ processed <- raw %>%
     !c(
       SEX,
       AGE,
+      HHWT,
+      PERWT,
+      yrsusa1,
       hhincome,
       hvalue,
       commute_time,
@@ -646,6 +651,8 @@ processed <- raw %>%
     as.factor
   ))
 
+# Save the processed data to csv for use by Forio
+write.csv(processed, file = "data/processed.csv", row.names = FALSE, na = "")
 
 # Take a look at the processed data summary to ensure
 # computed variables look reasonable
