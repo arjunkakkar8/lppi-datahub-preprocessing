@@ -20,6 +20,10 @@ processed <- raw %>%
   transmute(
     SEX = SEX,
     AGE = AGE,
+    gq = case_when(
+      GQ %in% c(1, 2, 5) ~ 0,
+      TRUE ~ 1
+    ),
     age_group = case_when(
       AGE <= 17 ~ 1,
       AGE <= 64 ~ 2,
@@ -35,11 +39,9 @@ processed <- raw %>%
       ),
       NA
     ),
-    # JZ: Can you double check this condition below right? I'm not sure it looks right.
-    househould_size = ifelse(PERNUM == 1 |
-      GQ %in% c(3, 4), 
-    NUMPREC,
-    NA
+    househould_size = ifelse(PERNUM == 1 & GQ %in% c(1, 2, 5),
+      NUMPREC,
+      NA
     ),
     race_recoded = case_when(
       HISPAN != 0 ~ 1,
@@ -61,23 +63,23 @@ processed <- raw %>%
         EMPSTATD != 14 &
         EMPSTATD != 15,
       case_when(
-        EMPSTATD %in% c(10,12,20) ~ 1
+        EMPSTATD %in% c(10, 12, 20) ~ 1,
         EMPSTATD == 30 ~ 0
       ),
       NA
     ),
     employ = ifelse(
-      AGE >= 16 & 
-        EMPSTATD %in% c(10,12,20),
+      AGE >= 16 &
+        EMPSTATD %in% c(10, 12, 20),
       case_when(
-        EMPSTATD %in% c(10,12) ~ 1,
+        EMPSTATD %in% c(10, 12) ~ 1,
         EMPSTATD == 20 ~ 2
       ),
       NA
     ),
     selfemp = ifelse(
-      AGE >= 16 & 
-        EMPSTATD %in% c(10,12),
+      AGE >= 16 &
+        EMPSTATD %in% c(10, 12),
       case_when(
         CLASSWKR == 1 ~ 1,
         CLASSWKR == 2 ~ 0
@@ -85,43 +87,43 @@ processed <- raw %>%
       NA
     ),
     occ_group = ifelse(
-      AGE >= 16 & 
-        EMPSTATD %in% c(10,12) &
+      AGE >= 16 &
+        EMPSTATD %in% c(10, 12) &
         OCC > 0 &
         OCC < 9800,
       case_when(
-        OCC >= 10 & OCC <= 960 ~ 1
-        OCC >= 1005 & OCC <= 1980 ~ 2
-        OCC >= 2001 & OCC <= 2920 ~ 3
-        OCC >= 3000 & OCC <= 3550 ~ 4
-        OCC >= 3601 & OCC <= 4655 ~ 5
-        OCC >= 4700 & OCC <= 4965 ~ 6
-        OCC >= 5000 & OCC <= 5940 ~ 7
-        OCC >= 6005 & OCC <= 6130 ~ 8
-        OCC >= 6200 & OCC <= 6950 ~ 9
-        OCC >= 7000 & OCC <= 7640 ~ 10
-        OCC >= 7700 & OCC <= 8990 ~ 11
+        OCC >= 10 & OCC <= 960 ~ 1,
+        OCC >= 1005 & OCC <= 1980 ~ 2,
+        OCC >= 2001 & OCC <= 2920 ~ 3,
+        OCC >= 3000 & OCC <= 3550 ~ 4,
+        OCC >= 3601 & OCC <= 4655 ~ 5,
+        OCC >= 4700 & OCC <= 4965 ~ 6,
+        OCC >= 5000 & OCC <= 5940 ~ 7,
+        OCC >= 6005 & OCC <= 6130 ~ 8,
+        OCC >= 6200 & OCC <= 6950 ~ 9,
+        OCC >= 7000 & OCC <= 7640 ~ 10,
+        OCC >= 7700 & OCC <= 8990 ~ 11,
         OCC >= 9005 & OCC <= 9760 ~ 12
       ),
       NA
     ),
     ind_group = ifelse(
-      AGE >= 16 & 
-        EMPSTATD %in% c(10,12) &
+      AGE >= 16 &
+        EMPSTATD %in% c(10, 12) &
         IND < 9370,
       case_when(
-        IND >= 170 & IND <= 490 ~ 1
-        IND == 770 ~ 2
-        IND >= 1070 & IND <= 3990 ~ 3
-        IND >= 4070 & IND <= 4590 ~ 4
-        IND >= 4670 & IND <= 5790 ~ 5
-        (IND >= 6070 & IND <= 6390) | (IND >= 570 & IND <= 690) ~ 6
-        IND >= 6470 & IND <= 6780 ~ 7
-        IND >= 6870 & IND <= 7190 ~ 8
-        IND >= 7270 & IND <= 7790 ~ 9
-        IND >= 7860 & IND <= 8470 ~ 10
-        IND >= 8561 & IND <= 8690 ~ 11
-        IND >= 8770 & IND <= 9290 ~ 12
+        IND >= 170 & IND <= 490 ~ 1,
+        IND == 770 ~ 2,
+        IND >= 1070 & IND <= 3990 ~ 3,
+        IND >= 4070 & IND <= 4590 ~ 4,
+        IND >= 4670 & IND <= 5790 ~ 5,
+        (IND >= 6070 & IND <= 6390) | (IND >= 570 & IND <= 690) ~ 6,
+        IND >= 6470 & IND <= 6780 ~ 7,
+        IND >= 6870 & IND <= 7190 ~ 8,
+        IND >= 7270 & IND <= 7790 ~ 9,
+        IND >= 7860 & IND <= 8470 ~ 10,
+        IND >= 8561 & IND <= 8690 ~ 11,
+        IND >= 8770 & IND <= 9290 ~ 12,
         IND >= 9370 & IND <= 9590 ~ 13
       ),
       NA
@@ -130,7 +132,7 @@ processed <- raw %>%
       AGE >= 16 &
         INCWAGE > 0 & INCWAGE < 999998 &
         WKSWORK1 > 0 & UHRSWORK > 0,
-      INCWAGE/(WKSWORK1*UHRSWORK),
+      INCWAGE / (WKSWORK1 * UHRSWORK),
       NA
     ),
     wage_15 = ifelse(
@@ -145,15 +147,13 @@ processed <- raw %>%
     ),
     hhincome = ifelse(
       PERNUM == 1 &
-        GQ %in% c(1,2,5),
-      case_when(
-        HHINCOME == 9999999 ~ NA,
-        HHINCOME < 9999999 ~ HHINCOME
-      ),
+        GQ %in% c(1, 2, 5) &
+        HHINCOME < 9999999,
+      HHINCOME,
       NA
     ),
     poverty = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         POVERTY > 0,
       case_when(
         POVERTY < 100 ~ 1,
@@ -163,7 +163,7 @@ processed <- raw %>%
       NA
     ),
     poverty_child = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         POVERTY > 0 &
         AGE < 18,
       case_when(
@@ -174,7 +174,7 @@ processed <- raw %>%
       NA
     ),
     poverty_employed = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         POVERTY > 0 &
         AGE >= 16 &
         (EMPSTATD == 10 | EMPSTATD == 12),
@@ -185,7 +185,7 @@ processed <- raw %>%
       NA
     ),
     foodstamp = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         FOODSTMP == 2 ~ 1,
         FOODSTMP == 1 ~ 0
@@ -193,7 +193,7 @@ processed <- raw %>%
       NA
     ),
     foodstamp_child = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         AGE < 18,
       case_when(
         FOODSTMP == 2 ~ 1,
@@ -202,7 +202,7 @@ processed <- raw %>%
       NA
     ),
     cash = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         AGE >= 15 &
         INCWELFR < 99999,
       case_when(
@@ -212,97 +212,96 @@ processed <- raw %>%
       NA
     ),
     ownership = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
-        OWNERSHIP == 1 ~ 1,
-        OWNERSHIP == 2 ~ 0
+        OWNERSHP == 1 ~ 1,
+        OWNERSHP == 2 ~ 0
       ),
       NA
     ),
     ownership_child = ifelse(
-      GQ %in% c(1,2,5) &
+      GQ %in% c(1, 2, 5) &
         AGE < 18,
       case_when(
-        OWNERSHIP == 1 ~ 1,
-        OWNERSHIP == 2 ~ 0
+        OWNERSHP == 1 ~ 1,
+        OWNERSHP == 2 ~ 0
       ),
       NA
     ),
     hvalue = ifelse(
       PERNUM == 1 &
-        OWNERSHIP == 1 &
-        GQ %in% c(1,2,5),
-      case_when(
-        VALUEH < 9999999 ~ VALUEH,
-        VALUEH == 9999999 ~ NA, 
-      ),
+        OWNERSHP == 1 &
+        GQ %in% c(1, 2, 5) &
+        VALUEH != 9999998 &
+        VALUEH != 9999999,
+      VALUEH,
       NA
     ),
     owner_hcost = ifelse(
-      OWNERSHIP == 1 & 
-        GQ %in% c(1,2,5) & 
+      OWNERSHP == 1 &
+        GQ %in% c(1, 2, 5) &
         OWNCOST < 99999,
       case_when(
-        OWNCOST/(hhincome/12) >= .3 & OWNCOST/(hhincome/12) < .5 ~ 1,
-        OWNCOST/(hhincome/12) >= .5 ~ 2,
+        OWNCOST / (hhincome / 12) >= .3 & OWNCOST / (hhincome / 12) < .5 ~ 1,
+        OWNCOST / (hhincome / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
     ),
     owner_hcost_child = ifelse(
-      OWNERSHIP == 1 & 
-        GQ %in% c(1,2,5) & 
+      OWNERSHP == 1 &
+        GQ %in% c(1, 2, 5) &
         OWNCOST < 99999 &
         AGE < 18,
       case_when(
-        OWNCOST/(hhincome/12) >= .3 & OWNCOST/(hhincome/12) < .5 ~ 1,
-        OWNCOST/(hhincome/12) >= .5 ~ 2,
+        OWNCOST / (hhincome / 12) >= .3 & OWNCOST / (hhincome / 12) < .5 ~ 1,
+        OWNCOST / (hhincome / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
     ),
     renter_hcost = ifelse(
-      OWNERSHIP == 2 & 
-        GQ %in% c(1,2,5) & 
+      OWNERSHP == 2 &
+        GQ %in% c(1, 2, 5) &
         RENTGRS > 0,
       case_when(
-        RENTGRS/(hhincome/12) >= .3 & RENTGRS/(hhincome/12) < .5 ~ 1,
-        RENTGRS/(hhincome/12) >= .5 ~ 2,
+        RENTGRS / (hhincome / 12) >= .3 & RENTGRS / (hhincome / 12) < .5 ~ 1,
+        RENTGRS / (hhincome / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
     ),
     renter_hcost_child = ifelse(
-      OWNERSHIP == 2 & 
-        GQ %in% c(1,2,5) & 
+      OWNERSHP == 2 &
+        GQ %in% c(1, 2, 5) &
         RENTGRS > 0 &
         AGE < 18,
       case_when(
-        RENTGRS/(hhincome/12) >= .3 & RENTGRS/(hhincome/12) < .5 ~ 1,
-        RENTGRS/(hhincome/12) >= .5 ~ 2,
+        RENTGRS / (hhincome / 12) >= .3 & RENTGRS / (hhincome / 12) < .5 ~ 1,
+        RENTGRS / (hhincome / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
     ),
     overcrowded = ifelse(
-      GQ %in% c(1,2,5), 
+      GQ %in% c(1, 2, 5),
       case_when(
-        NUMPREC/ROOMS > 1 ~ 1,
+        NUMPREC / ROOMS > 1 ~ 1,
         TRUE ~ 0
       ),
       NA
     ),
     overcrowded_child = ifelse(
-      GQ %in% c(1,2,5) &
-        AGE < 18, 
+      GQ %in% c(1, 2, 5) &
+        AGE < 18,
       case_when(
-        NUMPREC/ROOMS > 1 ~ 1,
+        NUMPREC / ROOMS > 1 ~ 1,
         TRUE ~ 0
       ),
       NA
     ),
     internet = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CINETHH == 3 ~ 1,
         CINETHH == 1 | CINETHH == 2 ~ 0
@@ -310,7 +309,7 @@ processed <- raw %>%
       NA
     ),
     broadband = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CIHISPEED == 20 ~ 1,
         CIHISPEED == 10 ~ 0
@@ -318,7 +317,7 @@ processed <- raw %>%
       NA
     ),
     laptop = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CILAPTOP == 2 ~ 1,
         CILAPTOP == 1 ~ 0
@@ -326,7 +325,7 @@ processed <- raw %>%
       NA
     ),
     smartphone = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CISMRTPHN == 2 ~ 1,
         CISMRTPHN == 1 ~ 0
@@ -334,7 +333,7 @@ processed <- raw %>%
       NA
     ),
     tablet = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CITABLET == 2 ~ 1,
         CITABLET == 1 ~ 0
@@ -342,7 +341,7 @@ processed <- raw %>%
       NA
     ),
     device = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         CILAPTOP == 2 & CISMRTPHN == 2 & CITABLET == 2 ~ 1,
         TRUE ~ 0
@@ -350,7 +349,7 @@ processed <- raw %>%
       NA
     ),
     vehicle = ifelse(
-      GQ %in% c(1,2,5),
+      GQ %in% c(1, 2, 5),
       case_when(
         VEHICLES == 9 ~ 1,
         VEHICLES > 0 & VEHICLES < 9 ~ 0
@@ -358,18 +357,18 @@ processed <- raw %>%
       NA
     ),
     wfh = ifelse(
-      AGE >= 16,
-      GQ %in% c(1,2,5),
-      WRKLSTWK == 2,
+      AGE >= 16 &
+        GQ %in% c(1, 2, 5) &
+        WRKLSTWK == 2,
       case_when(
-        TRANWORK == 0 ~ 1,
+        TRANWORK == 0 | TRANWORK == 80 ~ 1,
         TRUE ~ 0
       ),
       NA
     ),
     commute_time = ifelse(
       AGE >= 16 &
-        GQ %in% c(1,2,5) &
+        GQ %in% c(1, 2, 5) &
         WRKLSTWK == 2 &
         TRANWORK > 0,
       TRANTIME,
@@ -377,7 +376,7 @@ processed <- raw %>%
     ),
     public_commute = ifelse(
       AGE >= 16 &
-        GQ %in% c(1,2,5) &
+        GQ %in% c(1, 2, 5) &
         WRKLSTWK == 2 &
         TRANWORK > 0,
       case_when(
@@ -398,10 +397,43 @@ processed <- raw %>%
     eligible_voters = case_when(
       CITIZEN >= 0 & CITIZEN <= 2 & AGE >= 18 ~ 1,
       CITIZEN > 2 | AGE < 18 ~ 0
-    ))
+    )
+  ) %>%
+  # Convert categorical data to factors for easy summarization and tabulation
+  mutate(across(
+    !c(
+      SEX,
+      AGE,
+      hhincome,
+      hvalue,
+      commute_time,
+      wage
+    ),
+    as.factor
+  ))
 
 
 # Take a look at the processed data summary to ensure
 # computed variables look reasonable
 processed %>% summary()
 processed %>% str()
+
+
+# The cross_tablulate function is a helper to identify
+# missing criterion in the creation of the processed
+# variables.
+cross_tabulate <- function(df, in_var, cross_vars) {
+  tables <- lapply(cross_vars, function(cross_var) {
+    df %>%
+      group_by(across(all_of(c(in_var, cross_var)))) %>%
+      summarize(count = n()) %>%
+      pivot_wider(names_from = 2, values_from = count)
+  })
+
+  names(tables) <- cross_vars
+  return(tables)
+}
+
+# Example usage:
+cross_tabulate(processed, "married", c("age_group", "gq"))
+cross_tabulate(processed, "hhincome", c("age_group", "gq"))
