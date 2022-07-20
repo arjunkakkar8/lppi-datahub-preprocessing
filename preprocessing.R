@@ -17,6 +17,10 @@ ipums_view(ddi)
 # Create the processed data file including only the final
 # output rows
 processed <- raw %>%
+  filter(STATEFIP == 6) %>%
+  group_by(MULTYEAR, SERIAL) %>%
+  mutate(cash_child = sum(ifelse(INCWELFR < 99999, INCWELFR, 0))) %>%
+  ungroup() %>%
   transmute(
     SEX = SEX,
     AGE = AGE,
@@ -46,25 +50,25 @@ processed <- raw %>%
     race_recoded = case_when(
       HISPAN != 0 ~ 1,
       HISPAN == 0 & RACE == 1 ~ 2,
-      HISPAN == 0 & (RACE == 4 | RACE == 5 | RACE == 6) ~ 3,      
+      HISPAN == 0 & (RACE == 4 | RACE == 5 | RACE == 6) ~ 3,
       HISPAN == 0 & RACE == 2 ~ 4,
       HISPAN == 0 & RACE == 3 ~ 5,
       HISPAN == 0 & RACE == 7 ~ 6,
       HISPAN == 0 & (RACE == 8 | RACE == 9) ~ 7
     ),
     latino_race = ifelse(
-      HISPAN > 0, 
+      HISPAN > 0,
       case_when(
-      RACBLK == 2 ~ 1,
-      RACAMIND == 2 & RACBLK == 1 ~ 2,
-      (RACASIAN == 2 | RACPACIS == 2 ) & RACAMIND == 1 & RACBLK == 1 ~ 3,
-      RACWHT == 2 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 4,
-      RACOTHER == 2 & RACWHT == 1 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 5
+        RACBLK == 2 ~ 1,
+        RACAMIND == 2 & RACBLK == 1 ~ 2,
+        (RACASIAN == 2 | RACPACIS == 2) & RACAMIND == 1 & RACBLK == 1 ~ 3,
+        RACWHT == 2 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 4,
+        RACOTHER == 2 & RACWHT == 1 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 5
       ),
       NA
     ),
     latino_origin = ifelse(
-      HISPAN > 0, 
+      HISPAN > 0,
       case_when(
         HISPAND == 100 ~ 1,
         HISPAND == 200 ~ 2,
@@ -215,7 +219,7 @@ processed <- raw %>%
       case_when(
         SPEAKENG == 3 ~ 1,
         SPEAKENG == 4 ~ 2,
-        SPEAKENG %in% c(1,5,6) ~ 3
+        SPEAKENG %in% c(1, 5, 6) ~ 3
       ),
       NA
     ),
@@ -232,7 +236,7 @@ processed <- raw %>%
         LANGUAGE == 12,
       case_when(
         SPEAKENG == 4 ~ 1,
-        SPEAKENG %in% c(1,5,6) ~ 2
+        SPEAKENG %in% c(1, 5, 6) ~ 2
       ),
       NA
     ),
@@ -249,17 +253,17 @@ processed <- raw %>%
         LANGUAGE != 12 & LANGUAGE != 1,
       case_when(
         SPEAKENG == 4 ~ 1,
-        SPEAKENG %in% c(1,5,6) ~ 2
+        SPEAKENG %in% c(1, 5, 6) ~ 2
       ),
       NA
     ),
     lingisol = ifelse(
       GQ %in% c(1, 2, 5),
       case_when(
-         LINGISOL == 2 ~ 1,
-         LINGISOL == 1 ~ 0
+        LINGISOL == 2 ~ 1,
+        LINGISOL == 1 ~ 0
       ),
-      NA  
+      NA
     ),
     labforce = ifelse(
       AGE >= 16 &
@@ -424,6 +428,7 @@ processed <- raw %>%
       ),
       NA
     ),
+    cash_child = ifelse(AGE < 18 & cash_child > 0, 1, 0),
     ownership = ifelse(
       GQ %in% c(1, 2, 5),
       case_when(
@@ -645,7 +650,6 @@ processed <- raw %>%
 # Take a look at the processed data summary to ensure
 # computed variables look reasonable
 processed %>% summary()
-processed %>% str()
 
 
 # The cross_tabulate function is a helper to identify
@@ -665,4 +669,4 @@ cross_tabulate <- function(df, in_var, cross_vars) {
 
 # Example usage:
 cross_tabulate(processed, "married", c("age_group", "gq"))
-cross_tabulate(processed, "hhincome", c("age_group", "gq"))
+cross_tabulate(processed, "cash_child", c("age_group", "gq"))
