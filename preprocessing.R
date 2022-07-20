@@ -45,19 +45,160 @@ processed <- raw %>%
     ),
     race_recoded = case_when(
       HISPAN != 0 ~ 1,
-      RACE == 1 ~ 2,
-      RACE == 2 ~ 4,
-      RACE == 3 ~ 5,
-      RACE == 4 | RACE == 5 | RACE == 6 ~ 3,
-      RACE == 8 | RACE == 9 ~ 7,
-      RACE == 7 ~ 6,
-      TRUE ~ 6
+      HISPAN == 0 & RACE == 1 ~ 2,
+      HISPAN == 0 & (RACE == 4 | RACE == 5 | RACE == 6) ~ 3,      
+      HISPAN == 0 & RACE == 2 ~ 4,
+      HISPAN == 0 & RACE == 3 ~ 5,
+      HISPAN == 0 & RACE == 7 ~ 6,
+      HISPAN == 0 & (RACE == 8 | RACE == 9) ~ 7
     ),
-    # TODO: Processing for Latino race once
-    #       methodology is finalized
-    latino_race = NA,
-    latino_origin = NA,
-    # Jie's code
+    latino_race = ifelse(
+      HISPAN > 0, 
+      case_when(
+      RACBLK == 2 ~ 1,
+      RACAMIND == 2 & RACBLK == 1 ~ 2,
+      (RACASIAN == 2 | RACPACIS == 2 ) & RACAMIND == 1 & RACBLK == 1 ~ 3,
+      RACWHT == 2 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 4,
+      RACOTHER == 2 & RACWHT == 1 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 5
+      ),
+      NA
+    ),
+    latino_origin = ifelse(
+      HISPAN > 0, 
+      case_when(
+        HISPAND == 100 ~ 1,
+        HISPAND == 200 ~ 2,
+        HISPAND == 300 ~ 3,
+        HISPAND == 460 ~ 4,
+        HISPAND >= 401 & HISPAND <= 417 ~ 5,
+        HISPAND >= 420 & HISPAND <= 431 ~ 6,
+        HISPAN == 450 | HISPAND == 498 ~ 7
+      ),
+      NA
+    ),
+    latino_origin_details = ifelse(
+      HISPAND >= 401 & HISPAND <= 431,
+      case_when(
+        HISPAND == 411 ~ 1,
+        HISPAND == 412 ~ 2,
+        HISPAND == 413 ~ 3,
+        HISPAND == 414 ~ 4,
+        HISPAND == 415 ~ 5,
+        HISPAND == 416 ~ 6,
+        HISPAND == 417 ~ 7,
+        HISPAND == 420 ~ 8,
+        HISPAND == 421 ~ 9,
+        HISPAND == 422 ~ 10,
+        HISPAND == 423 ~ 11,
+        HISPAND == 424 ~ 12,
+        HISPAND == 425 ~ 13,
+        HISPAND == 426 ~ 14,
+        HISPAND == 427 ~ 15,
+        HISPAND == 428 ~ 16,
+        HISPAND == 431 ~ 17
+      ),
+      NA
+    ),
+    veteran = ifelse(
+      AGE >= 17,
+      case_when(
+        VETSTAT == 2 ~ 1,
+        VETSTAT == 1 ~ 0
+      ),
+      NA
+    ),
+    citizenship = case_when(
+      CITIZEN == 0 | CITIZEN == 1 ~ 1,
+      CITIZEN == 2 ~ 2,
+      CITIZEN == 3 ~ 3
+    ),
+    yrsusa2 = ifelse(
+      (CITIZEN == 2 | CITIZEN == 3),
+      YRSUSA2,
+      NA
+    ),
+    yrsusa1 = ifelse(
+      (CITIZEN == 2 | CITIZEN == 3),
+      YRSUSA1,
+      NA
+    ),
+    family_structure = ifelse(
+      AGE < 18,
+      case_when(
+        (MOMLOC != 0 & POPLOC != 0) | (MOMLOC != 0 & MOMLOC2 != 0) | (POPLOC != 0 & POPLOC2 != 0) ~ 1,
+        (MOMLOC != 0 & POPLOC == 0 & MOMLOC2 == 0) | (POPLOC != 0 & MOMLOC == 0 & POPLOC2 == 0) ~ 2,
+        MOMLOC == 0 & POPLOC == 0 ~ 3
+      ),
+      NA
+    ),
+    three_gen = ifelse(
+      AGE < 18,
+      case_when(
+        MULTGEN == 3 ~ 1,
+        MULTGEN == 1 | MULTGEN == 2 ~ 0
+      ),
+      NA
+    ),
+    live_grandkid = ifelse(
+      AGE >= 30 &
+        GQTYPE != 1,
+      case_when(
+        GCHOUSE == 2 ~ 1,
+        GCHOUSE == 1 ~ 0
+      ),
+      NA
+    ),
+    responsible_grandkid = ifelse(
+      AGE >= 30 &
+        GQTYPE != 1 &
+        GCHOUSE == 2,
+      case_when(
+        GCRESPON == 2 ~ 1,
+        GCRESPON == 1 ~ 0
+      ),
+      NA
+    ),
+    kids_gq = ifelse(
+      AGE < 18,
+      case_when(
+        GQ == 3 | GQ == 4 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
+    preschool = ifelse(
+      AGE >= 3 & AGE <= 4,
+      case_when(
+        SCHOOL == 2 & SCHLTYPE == 2 ~ 1,
+        SCHOOL == 2 & SCHLTYPE == 3 ~ 2,
+        SCHOOL == 1 ~ 3
+      ),
+      NA
+    ),
+    not_enrolled_es = ifelse(
+      AGE >= 5 & AGE <= 12,
+      case_when(
+        SCHOOL == 1 ~ 1,
+        SCHOOL == 2 ~ 0
+      ),
+      NA
+    ),
+    not_enrolled_hs = ifelse(
+      AGE >= 13 & AGE <= 17,
+      case_when(
+        SCHOOL == 1 ~ 1,
+        SCHOOL == 2 ~ 0
+      ),
+      NA
+    ),
+    disconnect_youth = ifelse(
+      AGE >= 16 & AGE <= 24,
+      case_when(
+        SCHOOL == 1 & (EMPSTAT == 2 | EMPSTAT == 3) ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
     eduatt = ifelse(
       AGE >= 25,
       case_when(
@@ -111,6 +252,14 @@ processed <- raw %>%
         SPEAKENG %in% c(1,5,6) ~ 2
       ),
       NA
+    ),
+    lingisol = ifelse(
+      GQ %in% c(1, 2, 5),
+      case_when(
+         LINGISOL == 2 ~ 1,
+         LINGISOL == 1 ~ 0
+      ),
+      NA  
     ),
     labforce = ifelse(
       AGE >= 16 &
@@ -234,6 +383,16 @@ processed <- raw %>%
         (EMPSTATD == 10 | EMPSTATD == 12),
       case_when(
         POVERTY > 100 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
+    free_lunch = ifelse(
+      GQ %in% c(1, 2, 5) &
+        POVERTY > 0 &
+        AGE < 18,
+      case_when(
+        POVERTY <= 185 ~ 1,
         TRUE ~ 0
       ),
       NA
@@ -424,7 +583,7 @@ processed <- raw %>%
       AGE >= 16 &
         GQ %in% c(1, 2, 5) &
         WRKLSTWK == 2 &
-        TRANWORK > 0,
+        TRANWORK > 0 & TRANWORK < 80,
       TRANTIME,
       NA
     ),
@@ -432,7 +591,7 @@ processed <- raw %>%
       AGE >= 16 &
         GQ %in% c(1, 2, 5) &
         WRKLSTWK == 2 &
-        TRANWORK > 0,
+        TRANWORK > 0 & TRANWORK < 80,
       case_when(
         TRANWORK %in% c(31, 34, 36, 37, 39) ~ 1,
         TRUE ~ 0
@@ -489,7 +648,7 @@ processed %>% summary()
 processed %>% str()
 
 
-# The cross_tablulate function is a helper to identify
+# The cross_tabulate function is a helper to identify
 # missing criterion in the creation of the processed
 # variables.
 cross_tabulate <- function(df, in_var, cross_vars) {
