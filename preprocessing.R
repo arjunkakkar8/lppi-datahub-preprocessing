@@ -56,6 +56,60 @@ processed <- raw %>%
     latino_race = NA,
     latino_origin = NA,
     # Jie's code
+    eduatt = ifelse(
+      AGE >= 25,
+      case_when(
+        EDUCD > 1 & EDUCD <= 61 ~ 1,
+        EDUCD == 63 | EDUCD == 64 ~ 2,
+        EDUCD >= 65 & EDUCD <= 81 ~ 3,
+        EDUCD == 101 ~ 4,
+        EDUCD > 114 ~ 5
+      ),
+      NA
+    ),
+    lep = ifelse(
+      AGE >= 5,
+      case_when(
+        SPEAKENG == 3 ~ 1,
+        SPEAKENG == 4 ~ 2,
+        SPEAKENG %in% c(1,5,6) ~ 3
+      ),
+      NA
+    ),
+    spanish = ifelse(
+      AGE >= 5,
+      case_when(
+        LANGUAGE == 12 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
+    spanish_lep = ifelse(
+      AGE >= 5 &
+        LANGUAGE == 12,
+      case_when(
+        SPEAKENG == 4 ~ 1,
+        SPEAKENG %in% c(1,5,6) ~ 2
+      ),
+      NA
+    ),
+    otherlang = ifelse(
+      AGE >= 5,
+      case_when(
+        LANGUAGE != 12 & LANGUAGE != 1 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
+    otherlang_lep = ifelse(
+      AGE >= 5 &
+        LANGUAGE != 12 & LANGUAGE != 1,
+      case_when(
+        SPEAKENG == 4 ~ 1,
+        SPEAKENG %in% c(1,5,6) ~ 2
+      ),
+      NA
+    ),
     labforce = ifelse(
       AGE >= 16 &
         EMPSTATD != 14 &
@@ -394,6 +448,22 @@ processed <- raw %>%
       HCOVANY == 2 & HINSEMP == 2 & HINSVA == 1 & HINSCAID == 1 & HINSCARE == 1 ~ 5,
       HCOVANY == 2 & HINSPUR == 2 & HINSEMP == 1 & HINSVA == 1 & HINSCAID == 1 & HINSCARE == 1 ~ 6,
       HCOVANY == 2 & HINSPUR == 1 & HINSEMP == 1 & HINSVA == 1 & HINSCAID == 1 & HINSCARE == 1 ~ 7
+    ),
+    medicaid_child = ifelse(
+      AGE < 18,
+      case_when(
+        HCOVANY == 2 & HINSCAID == 2 & HINSCARE == 1 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
+    ),
+    uninsured_child = ifelse(
+      AGE < 18,
+      case_when(
+        HCOVANY == 1 ~ 1,
+        TRUE ~ 0
+      ),
+      NA
     ),
     eligible_voters = case_when(
       CITIZEN >= 0 & CITIZEN <= 2 & AGE >= 18 ~ 1,
