@@ -22,6 +22,7 @@ processed <- raw %>%
   mutate(cash_child = sum(ifelse(INCWELFR < 99999, INCWELFR, 0))) %>%
   ungroup() %>%
   transmute(
+    STATEFIP = STATEFIP,
     SEX = SEX,
     AGE = AGE,
     HHWT = HHWT,
@@ -45,65 +46,57 @@ processed <- raw %>%
       ),
       NA
     ),
-    househould_size = ifelse(PERNUM == 1 & GQ %in% c(1, 2, 5),
+    household_size = ifelse(PERNUM == 1 & GQ %in% c(1, 2, 5),
       NUMPREC,
       NA
     ),
     race_recoded = case_when(
       HISPAN != 0 ~ 1,
-      HISPAN == 0 & RACE == 1 ~ 2,
-      HISPAN == 0 & (RACE == 4 | RACE == 5 | RACE == 6) ~ 3,
-      HISPAN == 0 & RACE == 2 ~ 4,
-      HISPAN == 0 & RACE == 3 ~ 5,
-      HISPAN == 0 & RACE == 7 ~ 6,
-      HISPAN == 0 & (RACE == 8 | RACE == 9) ~ 7
+      RACE == 1 ~ 2,
+      (RACE == 4 | RACE == 5 | RACE == 6) ~ 3,
+      RACE == 2 ~ 4,
+      RACE == 3 ~ 5,
+      RACE == 7 ~ 6,
+      (RACE == 8 | RACE == 9) ~ 7
     ),
     latino_race = ifelse(
       HISPAN > 0,
       case_when(
         RACBLK == 2 ~ 1,
-        RACAMIND == 2 & RACBLK == 1 ~ 2,
-        (RACASIAN == 2 | RACPACIS == 2) & RACAMIND == 1 & RACBLK == 1 ~ 3,
-        RACWHT == 2 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 4,
-        RACOTHER == 2 & RACWHT == 1 & RACASIAN == 1 & RACPACIS == 1 & RACAMIND == 1 & RACBLK == 1 ~ 5
+        RACAMIND == 2 ~ 2,
+        RACASIAN == 2 | RACPACIS == 2 ~ 3,
+        RACWHT == 2 ~ 4,
+        RACOTHER == 2 ~ 5
       ),
       NA
     ),
-    latino_origin = ifelse(
-      HISPAN > 0,
-      case_when(
-        HISPAND == 100 ~ 1,
-        HISPAND == 200 ~ 2,
-        HISPAND == 300 ~ 3,
-        HISPAND == 460 ~ 4,
-        HISPAND >= 401 & HISPAND <= 417 ~ 5,
-        HISPAND >= 420 & HISPAND <= 431 ~ 6,
-        HISPAN == 450 | HISPAND == 498 ~ 7
-      ),
-      NA
+    latino_origin = case_when(
+      HISPAND > 0 & HISPAND < 200 ~ 1,
+      HISPAND == 200 ~ 2,
+      HISPAND == 300 ~ 3,
+      HISPAND == 460 ~ 4,
+      HISPAND >= 401 & HISPAND <= 417 ~ 5,
+      HISPAND >= 420 & HISPAND <= 431 ~ 6,
+      HISPAND == 450 | HISPAND == 498 ~ 7
     ),
-    latino_origin_details = ifelse(
-      HISPAND >= 401 & HISPAND <= 431,
-      case_when(
-        HISPAND == 411 ~ 1,
-        HISPAND == 412 ~ 2,
-        HISPAND == 413 ~ 3,
-        HISPAND == 414 ~ 4,
-        HISPAND == 415 ~ 5,
-        HISPAND == 416 ~ 6,
-        HISPAND == 417 ~ 7,
-        HISPAND == 420 ~ 8,
-        HISPAND == 421 ~ 9,
-        HISPAND == 422 ~ 10,
-        HISPAND == 423 ~ 11,
-        HISPAND == 424 ~ 12,
-        HISPAND == 425 ~ 13,
-        HISPAND == 426 ~ 14,
-        HISPAND == 427 ~ 15,
-        HISPAND == 428 ~ 16,
-        HISPAND == 431 ~ 17
-      ),
-      NA
+    latino_origin_detailed = case_when(
+      HISPAND == 411 ~ 1,
+      HISPAND == 412 ~ 2,
+      HISPAND == 413 ~ 3,
+      HISPAND == 414 ~ 4,
+      HISPAND == 415 ~ 5,
+      HISPAND == 416 ~ 6,
+      HISPAND == 417 ~ 7,
+      HISPAND == 420 ~ 8,
+      HISPAND == 421 ~ 9,
+      HISPAND == 422 ~ 10,
+      HISPAND == 423 ~ 11,
+      HISPAND == 424 ~ 12,
+      HISPAND == 425 ~ 13,
+      HISPAND == 426 ~ 14,
+      HISPAND == 427 ~ 15,
+      HISPAND == 428 ~ 16,
+      HISPAND == 431 ~ 17
     ),
     veteran = ifelse(
       AGE >= 17,
@@ -119,7 +112,8 @@ processed <- raw %>%
       CITIZEN == 3 ~ 3
     ),
     yrsusa2 = ifelse(
-      (CITIZEN == 2 | CITIZEN == 3),
+      (CITIZEN == 2 | CITIZEN == 3) &
+        (YRSUSA2 != 0 | YRSUSA2 != 9),
       YRSUSA2,
       NA
     ),
@@ -212,7 +206,7 @@ processed <- raw %>%
         EDUCD == 63 | EDUCD == 64 ~ 2,
         EDUCD >= 65 & EDUCD <= 81 ~ 3,
         EDUCD == 101 ~ 4,
-        EDUCD > 114 ~ 5
+        EDUCD >= 114 & EDUCD <= 116 ~ 5
       ),
       NA
     ),
@@ -318,8 +312,7 @@ processed <- raw %>%
     ),
     ind_group = ifelse(
       AGE >= 16 &
-        EMPSTATD %in% c(10, 12) &
-        IND < 9370,
+        EMPSTATD %in% c(10, 12),
       case_when(
         IND >= 170 & IND <= 490 ~ 1,
         IND == 770 ~ 2,
@@ -388,7 +381,7 @@ processed <- raw %>%
         AGE >= 16 &
         (EMPSTATD == 10 | EMPSTATD == 12),
       case_when(
-        POVERTY > 100 ~ 1,
+        POVERTY < 100 ~ 1,
         TRUE ~ 0
       ),
       NA
@@ -421,8 +414,7 @@ processed <- raw %>%
       NA
     ),
     cash = ifelse(
-      GQ %in% c(1, 2, 5) &
-        AGE >= 15 &
+      AGE >= 15 &
         INCWELFR < 99999,
       case_when(
         INCWELFR > 0 ~ 1,
@@ -460,10 +452,11 @@ processed <- raw %>%
     owner_hcost = ifelse(
       OWNERSHP == 1 &
         GQ %in% c(1, 2, 5) &
-        OWNCOST < 99999,
+        OWNCOST < 99999 &
+        HHINCOME < 9999999,
       case_when(
-        OWNCOST / (hhincome / 12) >= .3 & OWNCOST / (hhincome / 12) < .5 ~ 1,
-        OWNCOST / (hhincome / 12) >= .5 ~ 2,
+        OWNCOST / (HHINCOME / 12) >= .3 & OWNCOST / (HHINCOME / 12) < .5 ~ 1,
+        OWNCOST / (HHINCOME / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
@@ -472,10 +465,11 @@ processed <- raw %>%
       OWNERSHP == 1 &
         GQ %in% c(1, 2, 5) &
         OWNCOST < 99999 &
+        HHINCOME < 9999999 &
         AGE < 18,
       case_when(
-        OWNCOST / (hhincome / 12) >= .3 & OWNCOST / (hhincome / 12) < .5 ~ 1,
-        OWNCOST / (hhincome / 12) >= .5 ~ 2,
+        OWNCOST / (HHINCOME / 12) >= .3 & OWNCOST / (HHINCOME / 12) < .5 ~ 1,
+        OWNCOST / (HHINCOME / 12) >= .5 ~ 2,
         TRUE ~ 3
       ),
       NA
@@ -503,7 +497,7 @@ processed <- raw %>%
       ),
       NA
     ),
-    overcrowded = ifelse(
+    overcrowd = ifelse(
       GQ %in% c(1, 2, 5),
       case_when(
         NUMPREC / ROOMS > 1 ~ 1,
@@ -511,7 +505,7 @@ processed <- raw %>%
       ),
       NA
     ),
-    overcrowded_child = ifelse(
+    overcrowd_child = ifelse(
       GQ %in% c(1, 2, 5) &
         AGE < 18,
       case_when(
@@ -581,7 +575,7 @@ processed <- raw %>%
         GQ %in% c(1, 2, 5) &
         WRKLSTWK == 2,
       case_when(
-        TRANWORK == 0 | TRANWORK == 80 ~ 1,
+        TRANWORK == 80 ~ 1,
         TRUE ~ 0
       ),
       NA
