@@ -1,6 +1,7 @@
 library(ipumsr)
 library(tidyverse)
 library(tictoc)
+library(multidplyr)
 
 # Use for styling file based on tidyverse style guide
 # Keeps the file manageable and readable
@@ -15,20 +16,22 @@ raw <- read_ipums_micro(ddi)
 # document
 ipums_view(ddi)
 
+# Create a cluster of processes, parallel::detectCores() - 2
+# is usually a good upper bound
+cluster <- new_cluster(parallel::detectCores() - 2)
+cluster_library(cluster, c("dplyr", "ipumsr"))
+
 # Create the processed data file including only the final
 # output rows
 tic()
 processed <- raw %>%
   filter(STATEFIP == 6) %>%
+  partition(cluster) %>%
   group_by(MULTYEAR, SERIAL) %>%
   mutate(cash_child = sum(ifelse(INCWELFR < 99999, INCWELFR, 0))) %>%
   ungroup() %>%
-  transmute(
-    STATEFIP = STATEFIP,
-    SEX = SEX,
-    AGE = AGE,
-    HHWT = HHWT,
-    PERWT = PERWT,
+  mutate(
+    .before = 1,
     gq = case_when(
       GQ %in% c(1, 2, 5) ~ 0,
       TRUE ~ 1
@@ -629,10 +632,11 @@ processed <- raw %>%
       CITIZEN > 2 | AGE < 18 ~ 0
     )
   ) %>%
+  select(1:67, STATEFIP, SEX, AGE, HHWT, PERWT) %>%
+  collect() %>%
   # Convert categorical data to factors for easy summarization and tabulation
   mutate(across(
     !c(
-      SEX,
       AGE,
       HHWT,
       PERWT,
