@@ -1,5 +1,6 @@
 library(ipumsr)
 library(tidyverse)
+library(tictoc)
 
 # Use for styling file based on tidyverse style guide
 # Keeps the file manageable and readable
@@ -16,6 +17,7 @@ ipums_view(ddi)
 
 # Create the processed data file including only the final
 # output rows
+tic()
 processed <- raw %>%
   filter(STATEFIP == 6) %>%
   group_by(MULTYEAR, SERIAL) %>%
@@ -642,6 +644,7 @@ processed <- raw %>%
     ),
     as.factor
   ))
+toc()
 
 # Save the processed data to csv for use by Forio
 write.csv(processed, file = "data/processed.csv", row.names = FALSE, na = "")
