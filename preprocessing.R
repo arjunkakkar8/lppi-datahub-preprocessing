@@ -18,14 +18,15 @@ ipums_view(ddi)
 
 # Create a cluster of processes, parallel::detectCores() - 2
 # is usually a good upper bound
-cluster <- new_cluster(parallel::detectCores() - 2)
+cluster <- new_cluster(parallel::detectCores())
 cluster_library(cluster, c("dplyr", "ipumsr"))
 
 # Create the processed data file including only the final
 # output rows
 tic()
 processed <- raw %>%
-  filter(STATEFIP == 6) %>%
+  # filter(STATEFIP == 6) %>%
+  sample_n(1000000) %>%
   partition(cluster) %>%
   group_by(MULTYEAR, SERIAL) %>%
   mutate(cash_child = sum(ifelse(INCWELFR < 99999, INCWELFR, 0))) %>%
