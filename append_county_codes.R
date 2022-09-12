@@ -1,10 +1,10 @@
 library(stringr)
 library(googlesheets4)
 
-# Use for styling file based on tidyverse style guide
-# Keeps the file manageable and readable
-library(styler)
-styler:::style_active_file()
+## Use for styling file based on tidyverse style guide
+## Keeps the file manageable and readable
+# library(styler)
+# styler:::style_active_file()
 
 ## While editing large datasets, there may be a need
 ## to increase the memory limit. Use the lines below
@@ -22,7 +22,7 @@ styler:::style_active_file()
 # test <- raw %>%
 #   append_county_codes()
 # 
-# a <- test %>% 
+# a <- processed %>%
 #   group_by(SERIAL) %>%
 #   summarize(members = mean(NUMPREC), count = n()) %>%
 #   mutate(check = members == count)

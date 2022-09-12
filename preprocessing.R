@@ -2,6 +2,7 @@ library(ipumsr)
 library(tidyverse)
 library(tictoc)
 library(multidplyr)
+source('append_county_codes.R')
 
 # Use for styling file based on tidyverse style guide
 # Keeps the file manageable and readable
@@ -27,6 +28,8 @@ tic()
 processed <- raw %>%
   # filter(STATEFIP == 6) %>%
   sample_n(1000000) %>%
+  # slice(1:1000000) %>%
+  append_county_codes() %>%
   partition(cluster) %>%
   group_by(MULTYEAR, SERIAL) %>%
   mutate(cash_child = sum(ifelse(INCWELFR < 99999, INCWELFR, 0))) %>%
