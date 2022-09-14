@@ -22,12 +22,17 @@ library(googlesheets4)
 # test <- raw %>%
 #   append_county_codes()
 # 
-# a <- processed %>%
+# a <- test %>%
 #   group_by(SERIAL) %>%
 #   summarize(members = mean(NUMPREC), count = n()) %>%
 #   mutate(check = members == count)
 # 
 # test %>% filter(SERIAL == '1721774') %>% View
+# 
+# population_by_county <- raw %>%
+#   append_county_codes() %>%
+#   group_by(county_name, county_id) %>%
+#   summarize(population = sum(PERWT), latino = sum(ifelse(HISPAN != 0, PERWT, 0)))
 
 append_county_codes <- function(raw,
                                 puma_var = "PUMA",

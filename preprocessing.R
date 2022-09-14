@@ -27,8 +27,8 @@ cluster_library(cluster, c("dplyr", "ipumsr"))
 tic()
 processed <- raw %>%
   # filter(STATEFIP == 6) %>%
-  sample_n(1000000) %>%
-  # slice(1:1000000) %>%
+  # sample_n(1000000) %>%
+  slice(1:10000) %>%
   append_county_codes() %>%
   partition(cluster) %>%
   group_by(MULTYEAR, SERIAL) %>%
