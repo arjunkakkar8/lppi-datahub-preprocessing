@@ -15,24 +15,26 @@ library(googlesheets4)
 
 ## Testing code to ensure that county coding is correct
 ## and that the function is executing properly
-# test <- raw %>%
-#   slice(1:10000000) %>%
+# processed <- raw %>%
 #   append_county_codes()
 # 
-# test <- raw %>%
-#   append_county_codes()
+# processed %>%
+#   filter(is.na(county_id)) %>%
+#   group_by(STATEFIP, PUMA) %>%
+#   summarize(count = n()) %>% View
 # 
-# a <- test %>%
-#   group_by(SERIAL) %>%
-#   summarize(members = mean(NUMPREC), count = n()) %>%
-#   mutate(check = members == count)
+# test <- processed %>%
+#   group_by(SERIAL, NUMPREC, PUMA) %>%
+#   summarize(count = n()) %>%
+#   mutate(check = NUMPREC == count)
 # 
-# test %>% filter(SERIAL == '1721774') %>% View
+# processed %>% filter(SERIAL == '6279244') %>% View
 # 
-# population_by_county <- raw %>%
-#   append_county_codes() %>%
-#   group_by(county_name, county_id) %>%
+# population_by_county <- processed %>%
+#   group_by(county_name, county_id, STATEFIP) %>%
 #   summarize(population = sum(PERWT), latino = sum(ifelse(HISPAN != 0, PERWT, 0)))
+# 
+# write.csv(population_by_county, 'data/county_codes_verification.csv', row.names = FALSE)
 
 append_county_codes <- function(raw,
                                 puma_var = "PUMA",

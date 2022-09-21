@@ -28,7 +28,7 @@ tic()
 processed <- raw %>%
   # filter(STATEFIP == 6) %>%
   # sample_n(1000000) %>%
-  slice(1:10000) %>%
+  # slice(1:10000) %>%
   append_county_codes() %>%
   partition(cluster) %>%
   group_by(MULTYEAR, SERIAL) %>%
@@ -636,7 +636,7 @@ processed <- raw %>%
       CITIZEN > 2 | AGE < 18 ~ 0
     )
   ) %>%
-  select(1:67, STATEFIP, SEX, AGE, HHWT, PERWT) %>%
+  select(1:67, STATEFIP, SEX, AGE, HHWT, PERWT, county_id) %>%
   collect() %>%
   # Convert categorical data to factors for easy summarization and tabulation
   mutate(across(
