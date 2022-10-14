@@ -2,7 +2,7 @@ library(ipumsr)
 library(tidyverse)
 library(tictoc)
 library(multidplyr)
-source('append_county_codes.R')
+source("append_county_codes.R")
 
 # Use for styling file based on tidyverse style guide
 # Keeps the file manageable and readable
@@ -634,9 +634,18 @@ processed <- raw %>%
     eligible_voters = case_when(
       CITIZEN >= 0 & CITIZEN <= 2 & AGE >= 18 ~ 1,
       CITIZEN > 2 | AGE < 18 ~ 0
+    ),
+    hhincome_filter = ifelse(
+      gq == 0,
+      case_when(
+        HHINCOME < 50000 ~ 1,
+        HHINCOME < 80000 ~ 2,
+        HHINCOME < 9999999 ~ 3
+      ),
+      NA
     )
   ) %>%
-  select(1:67, STATEFIP, SEX, AGE, HHWT, PERWT, county_id) %>%
+  select(1:66, YEAR, STATEFIP, SEX, AGE, HHWT, PERWT, county_id, hhincome_filter, cash_child) %>%
   collect() %>%
   # Convert categorical data to factors for easy summarization and tabulation
   mutate(across(
@@ -655,7 +664,7 @@ processed <- raw %>%
 toc()
 
 # Save the processed data to csv for use by Forio
-write.csv(processed, file = "data/processed.csv", row.names = FALSE, na = "")
+write.csv(processed, file = "data/processed_full.csv", row.names = FALSE, na = "")
 
 # Take a look at the processed data summary to ensure
 # computed variables look reasonable
