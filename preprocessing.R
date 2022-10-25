@@ -2,6 +2,7 @@ library(ipumsr)
 library(tidyverse)
 library(tictoc)
 library(multidplyr)
+library(data.table)
 source("append_county_codes.R")
 
 # Use for styling file based on tidyverse style guide
@@ -89,23 +90,27 @@ processed <- raw %>%
       HISPAND == 450 | HISPAND == 498 ~ 7
     ),
     latino_origin_detailed = case_when(
-      HISPAND == 411 ~ 1,
-      HISPAND == 412 ~ 2,
-      HISPAND == 413 ~ 3,
-      HISPAND == 414 ~ 4,
-      HISPAND == 415 ~ 5,
-      HISPAND == 416 ~ 6,
-      HISPAND == 417 ~ 7,
-      HISPAND == 420 ~ 8,
-      HISPAND == 421 ~ 9,
-      HISPAND == 422 ~ 10,
-      HISPAND == 423 ~ 11,
-      HISPAND == 424 ~ 12,
-      HISPAND == 425 ~ 13,
-      HISPAND == 426 ~ 14,
-      HISPAND == 427 ~ 15,
-      HISPAND == 428 ~ 16,
-      HISPAND == 431 ~ 17
+      HISPAND > 0 & HISPAND < 200 ~ 1,
+      HISPAND == 200 ~ 2,
+      HISPAND == 300 ~ 3,
+      HISPAND == 460 ~ 4,
+      HISPAND == 411 ~ 5,
+      HISPAND == 412 ~ 6,
+      HISPAND == 413 ~ 7,
+      HISPAND == 414 ~ 8,
+      HISPAND == 415 ~ 9,
+      HISPAND == 416 ~ 10,
+      HISPAND == 417 ~ 11,
+      HISPAND == 420 ~ 12,
+      HISPAND == 421 ~ 13,
+      HISPAND == 422 ~ 14,
+      HISPAND == 423 ~ 15,
+      HISPAND == 424 ~ 16,
+      HISPAND == 425 ~ 17,
+      HISPAND == 426 ~ 18,
+      HISPAND == 427 ~ 19,
+      HISPAND == 428 ~ 20,
+      HISPAND == 431 ~ 21
     ),
     veteran = ifelse(
       AGE >= 17,
@@ -216,6 +221,17 @@ processed <- raw %>%
         EDUCD >= 65 & EDUCD <= 81 ~ 3,
         EDUCD == 101 ~ 4,
         EDUCD >= 114 & EDUCD <= 116 ~ 5
+      ),
+      NA
+    ),
+    eduatt_condensed = ifelse(
+      AGE >= 25,
+      case_when(
+        EDUCD > 1 & EDUCD <= 61 ~ 1,
+        EDUCD == 63 | EDUCD == 64 ~ 2,
+        EDUCD >= 65 & EDUCD <= 81 ~ 3,
+        EDUCD == 101 ~ 3,
+        EDUCD >= 114 & EDUCD <= 116 ~ 3
       ),
       NA
     ),
@@ -342,7 +358,7 @@ processed <- raw %>%
       AGE >= 16 &
         INCWAGE > 0 & INCWAGE < 999998 &
         WKSWORK1 > 0 & UHRSWORK > 0,
-      INCWAGE / (WKSWORK1 * UHRSWORK),
+      round(INCWAGE / (WKSWORK1 * UHRSWORK)),
       NA
     ),
     wage_15 = ifelse(
@@ -645,7 +661,7 @@ processed <- raw %>%
       NA
     )
   ) %>%
-  select(1:66, YEAR, STATEFIP, SEX, AGE, HHWT, PERWT, county_id, hhincome_filter, cash_child) %>%
+  select(1:67, YEAR, STATEFIP, SEX, AGE, HHWT, PERWT, county_id, hhincome_filter, cash_child) %>%
   collect() %>%
   # Convert categorical data to factors for easy summarization and tabulation
   mutate(across(
@@ -660,11 +676,12 @@ processed <- raw %>%
       wage
     ),
     as.factor
-  ))
+  )) %>%
+  mutate(hhincome = as.integer(hhincome))
 toc()
 
 # Save the processed data to csv for use by Forio
-write.csv(processed, file = "data/processed_full.csv", row.names = FALSE, na = "")
+fwrite(processed, file = "data/processed_full.csv", row.names = FALSE, na = "", quote = FALSE)
 
 # Take a look at the processed data summary to ensure
 # computed variables look reasonable
