@@ -66,3 +66,13 @@ toc()
 sample %>%
   select(PERWT, HHWT, hhincome, AGE, poverty, STATEFIP) %>%
   write.csv('data/processed_sample_select.csv', row.names = FALSE, quote = FALSE, na = "")
+
+
+
+tic()
+full %>%
+  summarize(income = weighted_median(hhincome, HHWT, na.rm = TRUE))
+full %>%
+  group_by(STATEFIP) %>%
+  summarize(income = weighted_median(hhincome, HHWT, na.rm = TRUE))
+toc()
