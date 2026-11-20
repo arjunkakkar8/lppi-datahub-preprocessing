@@ -1,0 +1,24 @@
+[project]
+name = "ldh-preprocessing"
+version = "0.1.0"
+description = "LDH preprocessing pipeline: IPUMS extract to a verified data release"
+requires-python = ">=3.12"
+dependencies = ["polars>=1.20", "pyarrow>=18"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+ldh-release = "ldh_preprocessing.release.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ldh_preprocessing"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+markers = ["realdata: needs a local copy of processed_2022 (LDH_TEST_PARQUET)"]
